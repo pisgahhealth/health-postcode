@@ -1,3 +1,5 @@
+import { parsePartial } from "./postcode";
+
 /** ISO 3166-2:NG codes; NIPOST has not published its own list, every code in its published examples matches this table, and it is a display hint rather than a fact of record. */
 export const STATE_NAMES: Readonly<Record<string, string>> = Object.freeze({
   AB: "Abia", AD: "Adamawa", AK: "Akwa Ibom", AN: "Anambra", BA: "Bauchi", BY: "Bayelsa",
@@ -12,6 +14,7 @@ export const STATE_NAMES: Readonly<Record<string, string>> = Object.freeze({
 export const STATE_CODES_SEEN = ["AK", "BA", "EB", "EK", "EN", "FC", "JI", "KN", "LA", "NI", "OG"] as const;
 
 /** Accepts a two-letter code, a partial or a full postcode in any style. */
-export function stateName(_input: string): string | null {
-  throw new Error("not implemented");
+export function stateName(input: string): string | null {
+  const parsed = parsePartial(input);
+  return parsed === null ? null : (STATE_NAMES[parsed.state] ?? null);
 }
