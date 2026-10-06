@@ -1,0 +1,46 @@
+{
+  "name": "health-postcode",
+  "version": "0.1.0",
+  "description": "Nigeria's NIPOST digital postcode made safe for health records: parse, zoom out to a named precision level, apply who-sees-what policy, store as a FHIR R4 Address extension.",
+  "license": "MIT",
+  "author": "Pisgah Labs",
+  "repository": { "type": "git", "url": "git+https://github.com/Pisgah/health-postcode.git" },
+  "homepage": "https://github.com/Pisgah/health-postcode#readme",
+  "bugs": { "url": "https://github.com/Pisgah/health-postcode/issues" },
+  "keywords": ["nigeria", "nipost", "postcode", "postal-code", "fhir", "fhir-r4", "openmrs", "health", "privacy", "de-identification"],
+  "type": "module",
+  "sideEffects": false,
+  "engines": { "node": ">=18" },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": { "health-postcode": "./dist/cli.js" },
+  "exports": {
+    ".": {
+      "import": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+      "require": { "types": "./dist/index.d.cts", "default": "./dist/index.cjs" }
+    },
+    "./fhir/*": "./fhir/*",
+    "./openmrs/*": "./openmrs/*",
+    "./package.json": "./package.json"
+  },
+  "files": ["dist", "fhir", "openmrs", "docs", "README.md", "CHANGELOG.md", "LICENSE"],
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "pack:check": "npm pack --dry-run",
+    "prepublishOnly": "npm run typecheck && npm run lint && npm run test && npm run build"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9",
+    "@types/node": "^20",
+    "eslint": "^9",
+    "tsup": "^8",
+    "typescript": "^5.6",
+    "typescript-eslint": "^8",
+    "vitest": "^3"
+  }
+}
