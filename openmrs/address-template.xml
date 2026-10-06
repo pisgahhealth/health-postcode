@@ -1,0 +1,34 @@
+<org.openmrs.layout.address.AddressTemplate>
+  <nameMappings class="properties">
+    <property name="address1" value="Location.address1"/>
+    <property name="address2" value="Location.address2"/>
+    <property name="cityVillage" value="Location.cityVillage"/>
+    <property name="stateProvince" value="Location.stateProvince"/>
+    <property name="postalCode" value="NIPOST digital postcode"/>
+    <property name="country" value="Location.country"/>
+  </nameMappings>
+  <sizeMappings class="properties">
+    <property name="address1" value="40"/>
+    <property name="address2" value="40"/>
+    <property name="cityVillage" value="20"/>
+    <property name="stateProvince" value="20"/>
+    <property name="postalCode" value="15"/>
+    <property name="country" value="20"/>
+  </sizeMappings>
+  <elementDefaults class="properties">
+    <property name="country" value="Nigeria"/>
+  </elementDefaults>
+  <elementRegex class="properties">
+    <property name="postalCode" value="^[A-Za-z]{2}[ -]?(0[1-9]|[1-9][0-9])[ -]?[A-Za-z0-9]{3}[ -]?[A-Za-z]{2}[ -]?(0[1-9]|[1-9][0-9])$"/>
+  </elementRegex>
+  <elementRegexFormats class="properties">
+    <property name="postalCode" value="EK 01 A03 FK 01"/>
+  </elementRegexFormats>
+  <lineByLineFormat class="java.util.ArrayList">
+    <string>address1</string>
+    <string>address2</string>
+    <string>cityVillage stateProvince</string>
+    <string>postalCode</string>
+    <string>country</string>
+  </lineByLineFormat>
+</org.openmrs.layout.address.AddressTemplate>

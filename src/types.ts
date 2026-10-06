@@ -13,7 +13,7 @@ export interface PartialPostcode {
   /** The narrowest segment present. */
   level: Level;
   state: string;
-  /** Zero-padded two-digit string, e.g. "01"; ng-postcode uses the number 1. */
+  /** Zero-padded two-digit string, e.g. "01". */
   lga?: string;
   district?: string;
   area?: string;
