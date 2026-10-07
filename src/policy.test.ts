@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Level } from "./types";
+import type { Level, Style } from "./types";
 import { PURPOSES, forPurpose, suppressSmallCounts, type Purpose } from "./policy";
 
 const FULL = "EK 01 A03 FK 01";
@@ -62,6 +62,11 @@ describe("forPurpose", () => {
     expect(forPurpose(FULL, "analytics", { purposes: { analytics: "street" as Level } })).toBeNull();
     expect(forPurpose(FULL, "analytics", { purposes: { analytics: 3 as unknown as Level } })).toBeNull();
   });
+
+  it("throws RangeError for a bad style, even on bad input", () => {
+    expect(() => forPurpose(FULL, "analytics", { style: "dots" as Style })).toThrow(RangeError);
+    expect(() => forPurpose("bad", "analytics", { style: "dots" as Style })).toThrow(RangeError);
+  });
 });
 
 describe("suppressSmallCounts", () => {
@@ -116,5 +121,24 @@ describe("suppressSmallCounts", () => {
 
   it.each([[-1], [Number.NaN], [Number.POSITIVE_INFINITY]])("throws RangeError for min %j", (min) => {
     expect(() => suppressSmallCounts(rows, { count: "n", min })).toThrow(RangeError);
+  });
+
+  it("throws TypeError when rows is not an array or count names no column", () => {
+    expect(() => suppressSmallCounts("rows" as unknown as typeof rows, { count: "n" })).toThrow("rows must be an array");
+    expect(() => suppressSmallCounts(rows, {} as { count: "n" })).toThrow("count must name the column to read");
+    expect(() => suppressSmallCounts(rows, undefined as unknown as { count: "n" })).toThrow(TypeError);
+  });
+});
+
+describe("suppressSmallCounts reads every slot and own keys only", () => {
+  it("throws on a sparse array hole instead of skipping it", () => {
+    const rows: { n: number }[] = [{ n: 1 }];
+    rows[2] = { n: 10 };
+    expect(() => suppressSmallCounts(rows, { count: "n" })).toThrow(TypeError);
+  });
+
+  it("does not read an inherited count", () => {
+    const row = Object.create({ n: 10 }) as { n: number };
+    expect(() => suppressSmallCounts([row], { count: "n" })).toThrow(TypeError);
   });
 });

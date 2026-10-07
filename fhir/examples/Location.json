@@ -1,0 +1,33 @@
+{
+  "resourceType": "Location",
+  "id": "example-clinic",
+  "name": "Example Primary Health Centre",
+  "address": {
+    "extension": [
+      {
+        "url": "https://pisgahhealth.com/fhir/StructureDefinition/ng-digital-postcode",
+        "extension": [
+          {
+            "url": "code",
+            "valueString": "FC-02-D66-JE-06"
+          },
+          {
+            "url": "level",
+            "valueCode": "building"
+          },
+          {
+            "url": "confidence",
+            "valueCode": "high"
+          },
+          {
+            "url": "source",
+            "valueCode": "self-reported"
+          }
+        ]
+      }
+    ],
+    "state": "FCT",
+    "postalCode": "FC 02 D66 JE 06",
+    "country": "NG"
+  }
+}

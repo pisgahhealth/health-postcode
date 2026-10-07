@@ -1,0 +1,19 @@
+{
+  "resourceType": "ValueSet",
+  "id": "ng-digital-postcode-confidence",
+  "url": "https://pisgahhealth.com/fhir/ValueSet/ng-digital-postcode-confidence",
+  "version": "0.1.0",
+  "name": "NgDigitalPostcodeConfidence",
+  "title": "NIPOST digital postcode confidence",
+  "status": "draft",
+  "experimental": true,
+  "date": "2026-10-06",
+  "publisher": "Pisgah Labs",
+  "compose": {
+    "include": [
+      {
+        "system": "https://pisgahhealth.com/fhir/CodeSystem/ng-digital-postcode-confidence"
+      }
+    ]
+  }
+}

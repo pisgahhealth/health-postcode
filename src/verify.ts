@@ -1,5 +1,6 @@
 import type { PostcodeReference } from "./types";
 import { parse } from "./postcode";
+import { isFhirDateTime } from "./reference";
 
 export interface LookupResult {
   assigned: boolean;
@@ -25,9 +26,12 @@ export async function verify(input: string, lookup: Lookup): Promise<PostcodeRef
 }
 
 function toDate(value: unknown): Date {
-  const date = typeof value === "string" ? new Date(value) : new Date(Number.NaN);
-  if (Number.isNaN(date.getTime())) {
-    throw new RangeError("checkedAt from the lookup must be a parseable timestamp");
+  if (!isFhirDateTime(value)) {
+    throw new RangeError("checkedAt from the lookup must be a date-time with seconds and an offset, e.g. 2026-10-06T09:00:00Z");
+  }
+  const date = new Date(value as string);
+  if (Number.isNaN(date.getTime()) || !isFhirDateTime(date.toISOString())) {
+    throw new RangeError("checkedAt from the lookup is outside the range FHIR accepts");
   }
   return date;
 }

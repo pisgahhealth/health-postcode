@@ -1,0 +1,248 @@
+{
+  "resourceType": "StructureDefinition",
+  "id": "ng-digital-postcode",
+  "url": "https://pisgahhealth.com/fhir/StructureDefinition/ng-digital-postcode",
+  "version": "0.1.0",
+  "name": "NgDigitalPostcode",
+  "title": "Nigeria NIPOST digital postcode",
+  "status": "draft",
+  "experimental": true,
+  "date": "2026-10-06",
+  "publisher": "Pisgah Labs",
+  "contact": [
+    {
+      "name": "Pisgah Labs",
+      "telecom": [
+        {
+          "system": "url",
+          "value": "https://github.com/pisgahhealth/health-postcode"
+        }
+      ]
+    }
+  ],
+  "description": "A NIPOST National Digital Alphanumeric Postcode, or a prefix of one, attached to an Address, with the precision level it reaches and optional confidence, NIPOST assignment check, check time and source. Field meanings match https://adeniyikayodee.github.io/ng-postcode/schemas/postcode-reference.schema.json.",
+  "jurisdiction": [
+    {
+      "coding": [
+        {
+          "system": "urn:iso:std:iso:3166",
+          "code": "NG"
+        }
+      ]
+    }
+  ],
+  "fhirVersion": "4.0.1",
+  "kind": "complex-type",
+  "abstract": false,
+  "context": [
+    {
+      "type": "element",
+      "expression": "Address"
+    }
+  ],
+  "type": "Extension",
+  "baseDefinition": "http://hl7.org/fhir/StructureDefinition/Extension",
+  "derivation": "constraint",
+  "differential": {
+    "element": [
+      {
+        "id": "Extension",
+        "path": "Extension",
+        "short": "NIPOST digital postcode at a stated precision level",
+        "min": 0,
+        "max": "1",
+        "constraint": [
+          {
+            "key": "ngpc-2",
+            "severity": "error",
+            "human": "level must name the segment that code reaches: a code of 2 characters is state, 5 is lga, 9 is district, 12 is area, 15 is building",
+            "expression": "(extension.where(url='code').value.length() = 2 and extension.where(url='level').value = 'state') or (extension.where(url='code').value.length() = 5 and extension.where(url='level').value = 'lga') or (extension.where(url='code').value.length() = 9 and extension.where(url='level').value = 'district') or (extension.where(url='code').value.length() = 12 and extension.where(url='level').value = 'area') or (extension.where(url='code').value.length() = 15 and extension.where(url='level').value = 'building')"
+          }
+        ]
+      },
+      {
+        "id": "Extension.extension",
+        "path": "Extension.extension",
+        "slicing": {
+          "discriminator": [
+            {
+              "type": "value",
+              "path": "url"
+            }
+          ],
+          "ordered": false,
+          "rules": "open"
+        },
+        "min": 1
+      },
+      {
+        "id": "Extension.extension:code",
+        "path": "Extension.extension",
+        "sliceName": "code",
+        "short": "Hyphenated upper-case code down to level, e.g. EK-01-A03 or EK-01-A03-FK-01",
+        "min": 1,
+        "max": "1"
+      },
+      {
+        "id": "Extension.extension:code.url",
+        "path": "Extension.extension.url",
+        "fixedUri": "code"
+      },
+      {
+        "id": "Extension.extension:code.value[x]",
+        "path": "Extension.extension.value[x]",
+        "min": 1,
+        "type": [
+          {
+            "code": "string"
+          }
+        ],
+        "constraint": [
+          {
+            "key": "ngpc-1",
+            "severity": "error",
+            "human": "code must be a hyphenated upper-case NIPOST postcode prefix: 2 letters, then optionally -2 digits, -3 alphanumerics, -2 letters, -2 digits",
+            "expression": "$this.matches('^[A-Z]{2}(-(0[1-9]|[1-9][0-9])(-[A-Z0-9]{3}(-[A-Z]{2}(-(0[1-9]|[1-9][0-9]))?)?)?)?$')"
+          }
+        ]
+      },
+      {
+        "id": "Extension.extension:level",
+        "path": "Extension.extension",
+        "sliceName": "level",
+        "short": "The narrowest segment code reaches",
+        "min": 1,
+        "max": "1"
+      },
+      {
+        "id": "Extension.extension:level.url",
+        "path": "Extension.extension.url",
+        "fixedUri": "level"
+      },
+      {
+        "id": "Extension.extension:level.value[x]",
+        "path": "Extension.extension.value[x]",
+        "min": 1,
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "strength": "required",
+          "valueSet": "https://pisgahhealth.com/fhir/ValueSet/ng-digital-postcode-level"
+        }
+      },
+      {
+        "id": "Extension.extension:confidence",
+        "path": "Extension.extension",
+        "sliceName": "confidence",
+        "short": "How strongly the sender's evidence supports the code",
+        "min": 0,
+        "max": "1"
+      },
+      {
+        "id": "Extension.extension:confidence.url",
+        "path": "Extension.extension.url",
+        "fixedUri": "confidence"
+      },
+      {
+        "id": "Extension.extension:confidence.value[x]",
+        "path": "Extension.extension.value[x]",
+        "min": 1,
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "strength": "required",
+          "valueSet": "https://pisgahhealth.com/fhir/ValueSet/ng-digital-postcode-confidence"
+        }
+      },
+      {
+        "id": "Extension.extension:assigned",
+        "path": "Extension.extension",
+        "sliceName": "assigned",
+        "short": "Whether NIPOST reported the building code as assigned; absent when not checked",
+        "min": 0,
+        "max": "1"
+      },
+      {
+        "id": "Extension.extension:assigned.url",
+        "path": "Extension.extension.url",
+        "fixedUri": "assigned"
+      },
+      {
+        "id": "Extension.extension:assigned.value[x]",
+        "path": "Extension.extension.value[x]",
+        "min": 1,
+        "type": [
+          {
+            "code": "boolean"
+          }
+        ]
+      },
+      {
+        "id": "Extension.extension:checkedAt",
+        "path": "Extension.extension",
+        "sliceName": "checkedAt",
+        "short": "When assigned was read from NIPOST",
+        "min": 0,
+        "max": "1"
+      },
+      {
+        "id": "Extension.extension:checkedAt.url",
+        "path": "Extension.extension.url",
+        "fixedUri": "checkedAt"
+      },
+      {
+        "id": "Extension.extension:checkedAt.value[x]",
+        "path": "Extension.extension.value[x]",
+        "min": 1,
+        "type": [
+          {
+            "code": "dateTime"
+          }
+        ]
+      },
+      {
+        "id": "Extension.extension:source",
+        "path": "Extension.extension",
+        "sliceName": "source",
+        "short": "How the code was obtained",
+        "min": 0,
+        "max": "1"
+      },
+      {
+        "id": "Extension.extension:source.url",
+        "path": "Extension.extension.url",
+        "fixedUri": "source"
+      },
+      {
+        "id": "Extension.extension:source.value[x]",
+        "path": "Extension.extension.value[x]",
+        "min": 1,
+        "type": [
+          {
+            "code": "code"
+          }
+        ],
+        "binding": {
+          "strength": "required",
+          "valueSet": "https://pisgahhealth.com/fhir/ValueSet/ng-digital-postcode-source"
+        }
+      },
+      {
+        "id": "Extension.url",
+        "path": "Extension.url",
+        "fixedUri": "https://pisgahhealth.com/fhir/StructureDefinition/ng-digital-postcode"
+      },
+      {
+        "id": "Extension.value[x]",
+        "path": "Extension.value[x]",
+        "max": "0"
+      }
+    ]
+  }
+}

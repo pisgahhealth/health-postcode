@@ -1,5 +1,7 @@
 import { LEVELS, type Level, type PartialPostcode, type Postcode, type Style } from "./types";
-import { LOOSE_REGEX_BY_LEVEL, isStyle, levelIndex, render } from "./segments";
+import { LOOSE_REGEX_BY_LEVEL, assertStyle, levelIndex, render } from "./segments";
+
+const NOT_PRINTABLE_ASCII = /[^\x20-\x7E]/;
 
 /** The segment values of a parsed code up to and including the given level index. */
 export function segmentsOf(parsed: PartialPostcode, upTo: number): string[] {
@@ -8,7 +10,10 @@ export function segmentsOf(parsed: PartialPostcode, upTo: number): string[] {
 
 export function parsePartial(input: string): PartialPostcode | null {
   if (typeof input !== "string") return null;
-  const s = input.trim().toUpperCase();
+  const trimmed = input.trim();
+  // Non-ASCII input is rejected before upper-casing, since toUpperCase turns ß, ı, ſ and ligatures into ASCII letters.
+  if (NOT_PRINTABLE_ASCII.test(trimmed)) return null;
+  const s = trimmed.toUpperCase();
   for (let i = LEVELS.length - 1; i >= 0; i -= 1) {
     const level = LEVELS[i];
     const groups = LOOSE_REGEX_BY_LEVEL[level].exec(s)?.groups;
@@ -39,7 +44,7 @@ export function isValidFormat(input: string): boolean {
 }
 
 export function format(input: string, style: Style): string | null {
-  if (!isStyle(style)) throw new RangeError("style must be display, hyphen or compact");
+  assertStyle(style);
   return parsePartial(input)?.[style] ?? null;
 }
 
@@ -48,9 +53,11 @@ export function levelOf(input: string): Level | null {
 }
 
 export function at(input: string, level: Level, options?: { style?: Style }): string | null {
+  const style = options?.style ?? "display";
+  assertStyle(style);
   const parsed = parsePartial(input);
   if (parsed === null) return null;
   const want = levelIndex(level);
   if (want < 0 || want > levelIndex(parsed.level)) return null;
-  return render(segmentsOf(parsed, want), options?.style ?? "display");
+  return render(segmentsOf(parsed, want), style);
 }

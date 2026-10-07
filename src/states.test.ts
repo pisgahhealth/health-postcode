@@ -42,3 +42,9 @@ describe("stateName", () => {
     expect(stateName(42 as unknown as string)).toBeNull();
   });
 });
+
+describe("STATE_CODES_SEEN", () => {
+  it("is frozen", () => {
+    expect(Object.isFrozen(STATE_CODES_SEEN)).toBe(true);
+  });
+});

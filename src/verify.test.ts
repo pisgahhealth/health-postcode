@@ -64,3 +64,13 @@ describe("verify", () => {
     await expect(verify("EK 01 A03 FK 01", lookup)).rejects.toBeInstanceOf(RangeError);
   });
 });
+
+describe("verify checkedAt must be a FHIR date-time", () => {
+  it.each(["2026-10-06", "2026-10-06T09:00", "1", "Oct 6", "+010000-01-01T00:00:00Z", "0000-01-01T00:00:00Z"])(
+    "rejects %j with RangeError and never guesses a time",
+    async (checkedAt) => {
+      const lookup = vi.fn<Lookup>(async () => ({ assigned: true, checkedAt }));
+      await expect(verify("EK 01 A03 FK 01", lookup)).rejects.toThrow(RangeError);
+    },
+  );
+});

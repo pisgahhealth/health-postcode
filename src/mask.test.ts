@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { LEVELS, type Level, type Style } from "./types";
 import { mask } from "./mask";
+import { parsePartial } from "./postcode";
 
 const FULL = "EK 01 A03 FK 01";
 
@@ -47,14 +48,29 @@ describe("mask", () => {
     expect(() => mask(FULL, "district", { fill: 7 as unknown as string })).toThrow(RangeError);
   });
 
-  it("throws RangeError for a bad style", () => {
+  it("throws RangeError for a bad style, even on bad input", () => {
     expect(() => mask(FULL, "district", { style: "dots" as Style })).toThrow(RangeError);
+    expect(() => mask("bad", "district", { style: "dots" as Style })).toThrow(RangeError);
   });
 
   it.each(LEVELS)("is always 15 characters in display style at %s", (level) => {
     for (const input of [FULL, "EK", "EK 01", "EK 01 A03", "EK 01 A03 FK"]) {
       expect(mask(input, level)).toHaveLength(15);
       expect(mask(input, level, { fill: "*" })).toHaveLength(15);
+    }
+  });
+});
+
+describe("mask never yields another valid code", () => {
+  it.each(["0", "1", "9"])("rejects the digit fill %j", (fill) => {
+    expect(() => mask(FULL, "area", { fill })).toThrow(RangeError);
+  });
+
+  it.each(["·", "*", "x", "-"])("output with fill %j does not re-parse below building", (fill) => {
+    for (const level of LEVELS) {
+      const out = mask(FULL, level, { fill }) as string;
+      if (level === "building") expect(parsePartial(out)).not.toBeNull();
+      else expect(parsePartial(out)).toBeNull();
     }
   });
 });

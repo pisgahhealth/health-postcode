@@ -1,0 +1,28 @@
+{
+  "resourceType": "Patient",
+  "id": "example-district",
+  "address": [
+    {
+      "extension": [
+        {
+          "url": "https://pisgahhealth.com/fhir/StructureDefinition/ng-digital-postcode",
+          "extension": [
+            {
+              "url": "code",
+              "valueString": "FC-02-A09"
+            },
+            {
+              "url": "level",
+              "valueCode": "district"
+            },
+            {
+              "url": "source",
+              "valueCode": "derived"
+            }
+          ]
+        }
+      ],
+      "country": "NG"
+    }
+  ]
+}

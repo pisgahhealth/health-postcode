@@ -1,0 +1,35 @@
+{
+  "resourceType": "Organization",
+  "id": "example-org",
+  "name": "Example Pharmacy",
+  "address": [
+    {
+      "extension": [
+        {
+          "url": "https://pisgahhealth.com/fhir/StructureDefinition/ng-digital-postcode",
+          "extension": [
+            {
+              "url": "code",
+              "valueString": "EK-01-A03-FK-01"
+            },
+            {
+              "url": "level",
+              "valueCode": "building"
+            },
+            {
+              "url": "confidence",
+              "valueCode": "medium"
+            },
+            {
+              "url": "source",
+              "valueCode": "self-reported"
+            }
+          ]
+        }
+      ],
+      "state": "Ekiti",
+      "postalCode": "EK 01 A03 FK 01",
+      "country": "NG"
+    }
+  ]
+}

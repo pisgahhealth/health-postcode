@@ -32,7 +32,7 @@ forPurpose("EK 01 A03 FK 01", "patient_message"); // null
 | `area` | `EK 01 A03 FK` | an area (two letters) | at most 99 buildings |
 | `building` | `EK 01 A03 FK 01` | one building, NIPOST's building unit (two digits) | one building |
 
-Three input styles are accepted: display `EK 01 A03 FK 01`, hyphen `EK-01-A03-FK-01` and compact `EK01A03FK01`. Input is trimmed and upper-cased, then each gap between segments may hold nothing, one space or one hyphen, mixed freely, so `" ek-01 a03-fk 01 "` parses. Anything else is rejected, including a double space, a tab or an underscore between segments, and `00` in either numeric segment (both run 01 to 99).
+Three input styles are accepted: display `EK 01 A03 FK 01`, hyphen `EK-01-A03-FK-01` and compact `EK01A03FK01`. Input is trimmed and upper-cased, then each gap between segments may hold nothing, one space or one hyphen, mixed freely, so `" ek-01 a03-fk 01 "` parses. Anything else is rejected, including a double space, a tab or an underscore between segments, and `00` in either numeric segment (both run 01 to 99). Non-ASCII input is rejected before upper-casing, so a `ß` or a dotless `ı` never passes as `SS` or `I`.
 
 ```ts
 import { parse, parsePartial, format, levelOf, at, mask, stateName } from "health-postcode";
@@ -47,7 +47,7 @@ mask("EK 01 A03 FK 01", "district", { fill: "*" }); // "EK 01 A03 ** **"
 stateName("EK 01 A03 FK 01");                       // "Ekiti"
 ```
 
-`parse` takes full codes only; `parsePartial` also takes the prefixes the ladder produces. `at` returns `null` when the input is coarser than the level you ask for, while `mask` and `forPurpose` clamp and show what the input has. `mask` fills hidden segments with the middle dot `·` by default, which some terminals and SMS gateways mangle, so pass `{ fill: "*" }` for plain ASCII.
+`parse` takes full codes only; `parsePartial` also takes the prefixes the ladder produces. `at` returns `null` when the input is coarser than the level you ask for, while `mask` and `forPurpose` clamp and show what the input has. `mask` fills hidden segments with the middle dot `·` by default, which some terminals and SMS gateways mangle, so pass `{ fill: "*" }` for plain ASCII. A digit fill is refused, because `FK 11` would read as another building.
 
 `stateName` returns the ISO 3166-2:NG name for the first two letters, and that name is a display hint only: NIPOST has not published its own list of state codes, but all 11 state codes in its 21 published test postcodes match ISO 3166-2:NG. Store the code; never treat the name as a fact of record.
 
@@ -130,6 +130,7 @@ Only `code` and `level` are required. The [fhir/](fhir/) folder holds the Struct
 
 - `checkedAt` must be a full timestamp with an offset, such as `new Date().toISOString()`; a date alone, or an HTML `datetime-local` value such as `2026-10-06T09:00`, throws a `RangeError`.
 - When you truncate the extension for export, for example with `{ level: "district" }`, also drop or truncate `Address.postalCode` in the same step, or the full code travels beside the short one.
+- For an export copy, build the extension fresh from the code, `toFhirExtension(ref.code, { level: "district", source: "derived" })`, so `assigned` and `checkedAt` stay with the full record, as in [fhir/examples/Patient-district.json](fhir/examples/Patient-district.json).
 - `fromFhirExtension` is strict about value types (a `valueString` where `level` needs a `valueCode` gives `null`), while `fromReference` is lenient about code spelling and accepts any style or case.
 
 For agents and APIs that want plain JSON, `toReference` and `fromReference` use the postcode-reference shape from Kayode Adeniyi's [schema](https://adeniyikayodee.github.io/ng-postcode/schemas/postcode-reference.schema.json), plus an optional `source`. Note `checked_at` in this shape and `checkedAt` in options and in FHIR.
@@ -159,7 +160,7 @@ const ref = await verify("EK 01 A03 FK 01", async (code) => {
 // { code: "EK-01-A03-FK-01", level: "building", assigned: true, checked_at: "2026-...Z", source: "lookup" }
 ```
 
-This package makes no network calls. `verify` calls your lookup once with the compact code, returns `null` without calling it when the input is malformed or partial, and lets the lookup's errors through; return `checkedAt` too if your source gives one, otherwise it uses the current time. The adapter was checked against ng-postcode 0.1.1, where `createPostcodeClient` takes `{ baseUrl, apiKey, fetch }`, `lookup(code, level)` resolves to the response's `data`, and `valid` is the field read here as assigned; its mock answers `valid: true` for any well-formed code, so confirm the field against the version you install before you trust the result.
+This package makes no network calls. `verify` calls your lookup once with the compact code, returns `null` without calling it when the input is malformed or partial, and lets the lookup's errors through; return `checkedAt` too if your source gives one, as a full timestamp with an offset or `verify` throws a `RangeError`, otherwise it uses the current time. The adapter was checked against ng-postcode 0.1.1, where `createPostcodeClient` takes `{ baseUrl, apiKey, fetch }`, `lookup(code, level)` resolves to the response's `data`, and `valid` is the field read here as assigned; its mock answers `valid: true` for any well-formed code, so confirm the field against the version you install before you trust the result.
 
 ## OpenMRS
 
@@ -190,7 +191,7 @@ Checking the state table: from a clone, `NIPOST_API_KEY=... NIPOST_STATES_URL=..
 
 ## Contributing
 
-Issues and pull requests are welcome at [github.com/Pisgah/health-postcode](https://github.com/Pisgah/health-postcode). Use npm and run `npm run typecheck && npm run lint && npm test`; tests are vitest files next to the source, linting is ESLint with no Prettier, the style is double quotes, semicolons, trailing commas and two-space indent, and there are no runtime dependencies.
+Issues and pull requests are welcome at [github.com/pisgahhealth/health-postcode](https://github.com/pisgahhealth/health-postcode). Use npm and run `npm run typecheck && npm run lint && npm test`; tests are vitest files next to the source, linting is ESLint with no Prettier, the style is double quotes, semicolons, trailing commas and two-space indent, and there are no runtime dependencies.
 
 ## Licence
 

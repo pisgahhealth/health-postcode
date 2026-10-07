@@ -1,0 +1,19 @@
+{
+  "resourceType": "ValueSet",
+  "id": "ng-digital-postcode-source",
+  "url": "https://pisgahhealth.com/fhir/ValueSet/ng-digital-postcode-source",
+  "version": "0.1.0",
+  "name": "NgDigitalPostcodeSource",
+  "title": "NIPOST digital postcode source",
+  "status": "draft",
+  "experimental": true,
+  "date": "2026-10-06",
+  "publisher": "Pisgah Labs",
+  "compose": {
+    "include": [
+      {
+        "system": "https://pisgahhealth.com/fhir/CodeSystem/ng-digital-postcode-source"
+      }
+    ]
+  }
+}

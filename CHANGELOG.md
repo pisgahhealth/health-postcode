@@ -21,5 +21,5 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The `health-postcode` command with `parse`, `at`, `mask`, `for`, `fhir` and `state`.
 - An OpenMRS address template in `openmrs/`.
 
-[Unreleased]: https://github.com/Pisgah/health-postcode/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/Pisgah/health-postcode/releases/tag/v0.1.0
+[Unreleased]: https://github.com/pisgahhealth/health-postcode/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/pisgahhealth/health-postcode/releases/tag/v0.1.0

@@ -1,0 +1,33 @@
+{
+  "resourceType": "CodeSystem",
+  "id": "ng-digital-postcode-source",
+  "url": "https://pisgahhealth.com/fhir/CodeSystem/ng-digital-postcode-source",
+  "version": "0.1.0",
+  "name": "NgDigitalPostcodeSource",
+  "title": "NIPOST digital postcode source",
+  "status": "draft",
+  "experimental": true,
+  "date": "2026-10-06",
+  "publisher": "Pisgah Labs",
+  "caseSensitive": true,
+  "valueSet": "https://pisgahhealth.com/fhir/ValueSet/ng-digital-postcode-source",
+  "content": "complete",
+  "count": 3,
+  "concept": [
+    {
+      "code": "lookup",
+      "display": "Lookup",
+      "definition": "A NIPOST lookup, usually via an adapter."
+    },
+    {
+      "code": "self-reported",
+      "display": "Self-reported",
+      "definition": "Typed in by the patient or facility."
+    },
+    {
+      "code": "derived",
+      "display": "Derived",
+      "definition": "Truncated or computed from another record."
+    }
+  ]
+}

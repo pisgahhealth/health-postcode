@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LEVELS } from "./types";
+import { CONFIDENCES, LEVELS, SOURCES } from "./types";
 import {
   COMPACT_REGEX,
   HYPHEN_PARTIAL_REGEX,
@@ -98,5 +98,13 @@ describe("levelIndex and render", () => {
 
   it("throws RangeError on an unknown style", () => {
     expect(() => render(["EK"], "dots" as never)).toThrow(RangeError);
+  });
+});
+
+describe("enum tuples", () => {
+  it("are frozen so they cannot be widened at runtime", () => {
+    expect(Object.isFrozen(LEVELS)).toBe(true);
+    expect(Object.isFrozen(CONFIDENCES)).toBe(true);
+    expect(Object.isFrozen(SOURCES)).toBe(true);
   });
 });

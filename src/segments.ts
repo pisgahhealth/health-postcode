@@ -25,8 +25,12 @@ export function isStyle(value: unknown): value is Style {
   return typeof value === "string" && Object.prototype.hasOwnProperty.call(SEPARATORS, value);
 }
 
-export function render(segments: readonly string[], style: Style): string {
+export function assertStyle(style: unknown): asserts style is Style {
   if (!isStyle(style)) throw new RangeError("style must be display, hyphen or compact");
+}
+
+export function render(segments: readonly string[], style: Style): string {
+  assertStyle(style);
   return segments.join(SEPARATORS[style]);
 }
 

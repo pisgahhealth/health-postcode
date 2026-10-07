@@ -1,0 +1,55 @@
+{
+  "resourceType": "Patient",
+  "id": "example-building",
+  "name": [
+    {
+      "family": "Example",
+      "given": [
+        "Ada"
+      ]
+    }
+  ],
+  "address": [
+    {
+      "extension": [
+        {
+          "url": "https://pisgahhealth.com/fhir/StructureDefinition/ng-digital-postcode",
+          "extension": [
+            {
+              "url": "code",
+              "valueString": "FC-02-A09-DB-09"
+            },
+            {
+              "url": "level",
+              "valueCode": "building"
+            },
+            {
+              "url": "confidence",
+              "valueCode": "high"
+            },
+            {
+              "url": "assigned",
+              "valueBoolean": true
+            },
+            {
+              "url": "checkedAt",
+              "valueDateTime": "2026-10-06T09:00:00Z"
+            },
+            {
+              "url": "source",
+              "valueCode": "lookup"
+            }
+          ]
+        }
+      ],
+      "use": "home",
+      "line": [
+        "12 Example Street"
+      ],
+      "city": "Abuja",
+      "state": "FCT",
+      "postalCode": "FC 02 A09 DB 09",
+      "country": "NG"
+    }
+  ]
+}

@@ -1,10 +1,10 @@
-export const LEVELS = ["state", "lga", "district", "area", "building"] as const;
+export const LEVELS = Object.freeze(["state", "lga", "district", "area", "building"] as const);
 export type Level = (typeof LEVELS)[number];
 
-export const CONFIDENCES = ["high", "medium", "low"] as const;
+export const CONFIDENCES = Object.freeze(["high", "medium", "low"] as const);
 export type Confidence = (typeof CONFIDENCES)[number];
 
-export const SOURCES = ["lookup", "self-reported", "derived"] as const;
+export const SOURCES = Object.freeze(["lookup", "self-reported", "derived"] as const);
 export type Source = (typeof SOURCES)[number];
 
 export type Style = "display" | "hyphen" | "compact";

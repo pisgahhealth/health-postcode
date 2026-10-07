@@ -62,6 +62,18 @@ describe("parse", () => {
     expect(parse(null as unknown as string)).toBeNull();
     expect(parse(undefined as unknown as string)).toBeNull();
   });
+
+  it.each([
+    "ß 01 A03 FK 01",
+    "ık 01 a03 fk 01",
+    "ſk 01 a03 fk 01",
+    "ﬁ 01 A03 FK 01",
+    "ＥＫ 01 A03 FK 01",
+    "EK\u00A001 A03 FK 01",
+  ])("rejects non-ASCII input %j rather than upper-casing it into ASCII", (input) => {
+    expect(parsePartial(input)).toBeNull();
+    expect(parse(input)).toBeNull();
+  });
 });
 
 describe("parsePartial", () => {
@@ -168,7 +180,8 @@ describe("at", () => {
     expect(at(42 as unknown as string, "district")).toBeNull();
   });
 
-  it("throws RangeError for a bad style", () => {
+  it("throws RangeError for a bad style, even on bad input", () => {
     expect(() => at(FULL, "district", { style: "dots" as Style })).toThrow(RangeError);
+    expect(() => at("bad", "district", { style: "dots" as Style })).toThrow(RangeError);
   });
 });

@@ -11,7 +11,7 @@ export const STATE_NAMES: Readonly<Record<string, string>> = Object.freeze({
 });
 
 /** Codes confirmed in the 21 test postcodes NIPOST itself has published; extend as more appear. */
-export const STATE_CODES_SEEN = ["AK", "BA", "EB", "EK", "EN", "FC", "JI", "KN", "LA", "NI", "OG"] as const;
+export const STATE_CODES_SEEN = Object.freeze(["AK", "BA", "EB", "EK", "EN", "FC", "JI", "KN", "LA", "NI", "OG"] as const);
 
 /** Accepts a two-letter code, a partial or a full postcode in any style. */
 export function stateName(input: string): string | null {

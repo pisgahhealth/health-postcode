@@ -1,0 +1,43 @@
+{
+  "resourceType": "CodeSystem",
+  "id": "ng-digital-postcode-level",
+  "url": "https://pisgahhealth.com/fhir/CodeSystem/ng-digital-postcode-level",
+  "version": "0.1.0",
+  "name": "NgDigitalPostcodeLevel",
+  "title": "NIPOST digital postcode precision level",
+  "status": "draft",
+  "experimental": true,
+  "date": "2026-10-06",
+  "publisher": "Pisgah Labs",
+  "caseSensitive": true,
+  "valueSet": "https://pisgahhealth.com/fhir/ValueSet/ng-digital-postcode-level",
+  "content": "complete",
+  "count": 5,
+  "concept": [
+    {
+      "code": "state",
+      "display": "State",
+      "definition": "Two letters: the state."
+    },
+    {
+      "code": "lga",
+      "display": "LGA",
+      "definition": "Plus two digits: the local government area."
+    },
+    {
+      "code": "district",
+      "display": "District",
+      "definition": "Plus three alphanumerics: a district."
+    },
+    {
+      "code": "area",
+      "display": "Area",
+      "definition": "Plus two letters: a patch of at most 99 buildings."
+    },
+    {
+      "code": "building",
+      "display": "Building",
+      "definition": "Plus two digits: one building. NIPOST says building unit; the ng-postcode npm package says unit."
+    }
+  ]
+}
