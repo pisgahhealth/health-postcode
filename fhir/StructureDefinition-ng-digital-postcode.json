@@ -57,6 +57,12 @@
             "severity": "error",
             "human": "level must name the segment that code reaches: a code of 2 characters is state, 5 is lga, 9 is district, 12 is area, 15 is building",
             "expression": "(extension.where(url='code').value.length() = 2 and extension.where(url='level').value = 'state') or (extension.where(url='code').value.length() = 5 and extension.where(url='level').value = 'lga') or (extension.where(url='code').value.length() = 9 and extension.where(url='level').value = 'district') or (extension.where(url='code').value.length() = 12 and extension.where(url='level').value = 'area') or (extension.where(url='code').value.length() = 15 and extension.where(url='level').value = 'building')"
+          },
+          {
+            "key": "ngpc-3",
+            "severity": "error",
+            "human": "assigned and checkedAt describe a building code, so they may only appear when level is building",
+            "expression": "extension.where(url = 'level').value = 'building' or (extension.where(url = 'assigned').empty() and extension.where(url = 'checkedAt').empty())"
           }
         ]
       },

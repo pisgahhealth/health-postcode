@@ -1,6 +1,6 @@
 {
   "name": "health-postcode",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Nigeria's NIPOST digital postcode made safe for health records: parse, zoom out to a named precision level, apply who-sees-what policy, store as a FHIR R4 Address extension.",
   "license": "MIT",
   "author": "Pisgah Labs",

@@ -12,14 +12,16 @@ export async function verify(input: string, lookup: Lookup): Promise<PostcodeRef
   const parsed = parse(input);
   if (parsed === null) return null;
   const result = await lookup(parsed.compact);
-  if (typeof result !== "object" || result === null) {
-    throw new TypeError("lookup must resolve to an object with an assigned field");
+  if (typeof result !== "object" || result === null || typeof result.assigned !== "boolean") {
+    throw new TypeError(
+      "lookup must resolve to { assigned: true | false }; a missing or non-boolean assigned is a failed check, not a negative one",
+    );
   }
   const checkedAt = result.checkedAt === undefined ? new Date() : toDate(result.checkedAt);
   return {
     code: parsed.hyphen,
     level: "building",
-    assigned: result.assigned === true,
+    assigned: result.assigned,
     checked_at: checkedAt.toISOString(),
     source: "lookup",
   };

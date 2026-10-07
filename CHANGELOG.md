@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-07
+
+Three behaviours changed after an outside review. All three are breaking for code that relied on the old shape.
+
+### Changed
+
+- `verify` now throws a `TypeError` when the lookup resolves without a boolean `assigned`, instead of recording `assigned: false` with a fresh timestamp. A malformed adapter response is a failed check, not a negative one.
+- `assigned` and `checked_at` are only valid at building level. `toReference` and `toFhirExtension` throw a `RangeError` when they are given with a coarser level; `fromReference` and `fromFhirExtension` return `null` for a coarser reference that carries them; the StructureDefinition gains invariant `ngpc-3` saying the same.
+- `toFhirExtension(reference, { level })` with a coarser level now coarsens: it drops `assigned` and `checkedAt` and sets `source` to `derived`, instead of shortening the code under an unchanged check.
+- `suppressSmallCounts` returns only the rows safe to export, as an array. The counts of what it dropped moved to `suppressionReport`, so serialising the export cannot disclose a hidden total.
+
+### Added
+
+- `coarsen(reference, level)`: the explicit way to cut a checked reference to a coarser level.
+- `coarsenFhirAddress(address, level)`: the share copy of one FHIR `Address` at a coarser level, keeping `use`, `type`, `state` and `country` and the cut extension, dropping lines, city, district, text, `postalCode`, `period` and every other extension.
+- `suppressionReport(rows, options)`: kept rows, suppressed rows and suppressed total, for logs and review.
+- `FhirAddress` and `SuppressionReport` types.
+
+### Removed
+
+- The `SuppressResult` type.
+
 ## [0.1.0] - 2026-10-06
 
 ### Added
@@ -21,5 +43,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - The `health-postcode` command with `parse`, `at`, `mask`, `for`, `fhir` and `state`.
 - An OpenMRS address template in `openmrs/`.
 
-[Unreleased]: https://github.com/pisgahhealth/health-postcode/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/pisgahhealth/health-postcode/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/pisgahhealth/health-postcode/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pisgahhealth/health-postcode/releases/tag/v0.1.0

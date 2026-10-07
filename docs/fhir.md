@@ -43,15 +43,37 @@ fromFhirExtension(ext);
 | `checkedAt` | dateTime | when `assigned` was read from NIPOST |
 | `source` | code | `lookup`, `self-reported`, `derived` |
 
-Two invariants are enforced by the StructureDefinition and by `fromFhirExtension`: the code must be a valid hyphenated prefix, and its length must match `level`, so an extension cannot say district while carrying a building.
+Three invariants are enforced by the StructureDefinition and by `fromFhirExtension`: the code must be a valid hyphenated prefix (`ngpc-1`), its length must match `level` (`ngpc-2`), and `assigned` and `checkedAt` may only appear when `level` is `building` (`ngpc-3`), because they describe one building code.
+
+The fields answer one question each, and none of them answers the others: a valid format says the characters form a postcode; `assigned` says NIPOST knows a building with that code; neither says the patient lives there now, nor that visiting or contacting them there is appropriate. Those last two are for the care team and the record around the address.
 
 ## Rules worth knowing
 
 - `checkedAt` must be a full timestamp with an offset, such as `new Date().toISOString()`. A date alone, or an HTML `datetime-local` value such as `2026-10-06T09:00`, throws a `RangeError`.
-- When you truncate the extension for export, for example with `{ level: "district" }`, also drop or truncate `Address.postalCode` in the same step, or the full code travels beside the short one.
-- For an export copy, build the extension fresh from the code, `toFhirExtension(ref.code, { level: "district", source: "derived" })`, so `assigned` and `checkedAt` stay with the full record. See [../fhir/examples/Patient-district.json](../fhir/examples/Patient-district.json).
+- To share at a coarser level, use `coarsen(ref, "district")` for the reference or `coarsenFhirAddress(address, "district")` for the whole `Address`. Both drop `assigned` and `checkedAt` and set `source` to `derived`; `toFhirExtension(ref, { level: "district" })` does the same. See [../fhir/examples/Patient-district.json](../fhir/examples/Patient-district.json).
+- `coarsenFhirAddress` handles one `Address`: it keeps `use`, `type`, `state` and `country` plus the cut extension, and drops `line`, `city`, `district`, `text`, `postalCode`, `period` and every other extension (a geolocation extension would otherwise carry coordinates). It does not touch the rest of the resource, so names, identifiers, narrative, linked resources and dates are still yours to handle.
 - `fromFhirExtension` is strict about value types: a `valueString` where `level` needs a `valueCode` gives `null`. `fromReference` below is lenient about code spelling and accepts any style or case.
 - `Address.postalCode`, when present, should hold the display form of the same code, so systems that ignore extensions still get something correct.
+
+## Sharing a whole address
+
+```ts
+import { coarsenFhirAddress } from "health-postcode";
+
+const home = {
+  use: "home",
+  line: ["12 Example Street"],
+  city: "Ado Ekiti",
+  state: "Ekiti",
+  postalCode: "EK 01 A03 FK 01",
+  country: "NG",
+  extension: [ext], // the building-level extension from above
+};
+coarsenFhirAddress(home, "district");
+// { use: "home", state: "Ekiti", country: "NG", extension: [{ url: EXTENSION_URL, extension: [
+//   { url: "code", valueString: "EK-01-A03" }, { url: "level", valueCode: "district" },
+//   { url: "confidence", valueCode: "high" }, { url: "source", valueCode: "derived" } ] }] }
+```
 
 ## What ships in `fhir/`
 
@@ -72,7 +94,7 @@ fromReference({ code: "ek 01 a03", level: "district" });
 
 ## Validating with the HL7 validator
 
-Needs Java 11 or later. Add `-tx n/a` when offline. Expect no errors; warnings about draft and experimental status are fine.
+Needs Java 11 or later. Add `-tx n/a` when offline. Expect no errors; warnings about draft and experimental status are fine. A clean run shows the artifacts conform to FHIR R4 as checked by the validator; it is not an HL7 or NIPOST endorsement, and it says nothing about whether any other system has adopted the extension.
 
 ```sh
 curl -L -o validator_cli.jar https://github.com/hapifhir/org.hl7.fhir.core/releases/latest/download/validator_cli.jar

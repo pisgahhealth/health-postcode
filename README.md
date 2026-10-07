@@ -8,10 +8,10 @@ A code such as `EK 01 A03 FK 01` names one building, not a person. Cut it short 
 
 For developers writing EMRs, community health worker apps, lab and pharmacy systems, surveillance dashboards or delivery services in Nigeria. The code goes into a record once; these then become features instead of projects:
 
-- **Find patients again.** Store a verified building code at registration (`verify`) and give the nurse who visits today the full code (`forPurpose(code, "home_visit")`). Follow-up for HIV, TB, antenatal and immunisation stops depending on "behind the filling station".
+- **Find patients again.** Store a checked building code at registration (`verify`) and give the nurse who visits today the full code (`forPurpose(code, "home_visit")`). Follow-up for HIV, TB, antenatal and immunisation gets a destination that another team can read, provided the address is current and a visit is appropriate.
 - **Walking lists for health workers.** Group overdue patients by patch with `at(code, "area")`, so one walk covers a street instead of a scatter of landmarks.
 - **Street-level outbreak signals.** Count diagnoses by `at(code, "area")` this week against last month and see a cluster while the cases are still few; share it with the state at district level.
-- **Dashboards, AI and research exports that cannot leak a front door.** `forPurpose(code, "analytics")`, `forPurpose(code, "ai")` and `suppressSmallCounts` give you data minimisation as a function call, not a policy document.
+- **Dashboards, AI and research exports that carry only the precision they need.** `forPurpose(code, "analytics")`, `coarsenFhirAddress(address, "district")` and `suppressSmallCounts` make the cut a function call. Who may call it, when, and what gets logged stays with your application.
 - **Records that travel.** The FHIR R4 extension lets OpenMRS, DHIS2, lab and claims systems exchange a location with its precision and a NIPOST-verified flag, so it means the same thing on both sides.
 - **Delivery and home services.** Pharmacy refills, home sample collection and post-discharge visits with the building released only at dispatch time, never in the SMS.
 
@@ -66,7 +66,7 @@ const ext = toFhirExtension("EK 01 A03 FK 01", { assigned: true, checkedAt: "202
 fromFhirExtension(ext); // { code: "EK-01-A03-FK-01", level: "building", assigned: true, checked_at: "..." }
 ```
 
-The extension, its StructureDefinition, CodeSystems, ValueSets and examples are described in [docs/fhir.md](docs/fhir.md). An OpenMRS address template is in [openmrs/](openmrs/).
+To share a record at a coarser level use `coarsen(ref, "district")` or `coarsenFhirAddress(address, "district")`; both drop the building-level check rather than carry it under a shorter code. The extension, its StructureDefinition, CodeSystems, ValueSets and examples are described in [docs/fhir.md](docs/fhir.md). An OpenMRS address template is in [openmrs/](openmrs/).
 
 ## Command line
 

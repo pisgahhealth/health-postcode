@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Level, Style } from "./types";
-import { PURPOSES, forPurpose, suppressSmallCounts, type Purpose } from "./policy";
+import { PURPOSES, forPurpose, suppressSmallCounts, suppressionReport, type Purpose } from "./policy";
 
 const FULL = "EK 01 A03 FK 01";
 
@@ -77,35 +77,39 @@ describe("suppressSmallCounts", () => {
     { d: "EK 01 A06", n: 0 },
   ];
 
-  it("keeps rows at or above the default minimum of 5, in order", () => {
-    expect(suppressSmallCounts(rows, { count: "n" })).toEqual({
-      kept: [rows[0], rows[2]],
-      suppressed: { rows: 2, total: 3 },
-    });
+  it("returns only the rows at or above the default minimum of 5, in order, and nothing about the rest", () => {
+    const kept = suppressSmallCounts(rows, { count: "n" });
+    expect(kept).toEqual([rows[0], rows[2]]);
+    const serialised = JSON.stringify(kept);
+    expect(serialised).not.toContain("EK 01 A04");
+    expect(serialised).not.toContain("EK 01 A06");
+    expect(serialised).not.toContain('"n":3');
   });
 
   it("honours a custom minimum", () => {
-    expect(suppressSmallCounts(rows, { count: "n", min: 10 })).toEqual({
-      kept: [rows[0]],
-      suppressed: { rows: 3, total: 8 },
-    });
-    expect(suppressSmallCounts(rows, { count: "n", min: 0 })).toEqual({
-      kept: rows,
-      suppressed: { rows: 0, total: 0 },
-    });
+    expect(suppressSmallCounts(rows, { count: "n", min: 10 })).toEqual([rows[0]]);
+    expect(suppressSmallCounts(rows, { count: "n", min: 0 })).toEqual(rows);
   });
 
   it("handles an empty input", () => {
-    expect(suppressSmallCounts([], { count: "n" })).toEqual({ kept: [], suppressed: { rows: 0, total: 0 } });
+    expect(suppressSmallCounts([], { count: "n" })).toEqual([]);
+    expect(suppressionReport([], { count: "n" })).toEqual({ keptRows: 0, suppressedRows: 0, suppressedTotal: 0 });
   });
 
   it("does not mutate the input and keeps the same row objects", () => {
     const before = structuredClone(rows);
-    const result = suppressSmallCounts(rows, { count: "n" });
+    const kept = suppressSmallCounts(rows, { count: "n" });
     expect(rows).toEqual(before);
-    expect(result.kept[0]).toBe(rows[0]);
-    expect(result.kept[1]).toBe(rows[2]);
-    expect(result.kept).not.toBe(rows);
+    expect(kept[0]).toBe(rows[0]);
+    expect(kept[1]).toBe(rows[2]);
+    expect(kept).not.toBe(rows);
+  });
+
+  it("reports what was dropped through suppressionReport, apart from the export", () => {
+    expect(suppressionReport(rows, { count: "n" })).toEqual({ keptRows: 2, suppressedRows: 2, suppressedTotal: 3 });
+    expect(suppressionReport(rows, { count: "n", min: 10 })).toEqual({ keptRows: 1, suppressedRows: 3, suppressedTotal: 8 });
+    expect(() => suppressionReport(rows, { count: "n", min: -1 })).toThrow(RangeError);
+    expect(() => suppressionReport([{ n: "3" }], { count: "n" })).toThrow(TypeError);
   });
 
   it.each([["3"], [Number.NaN], [-1], [Number.POSITIVE_INFINITY], [undefined]])(

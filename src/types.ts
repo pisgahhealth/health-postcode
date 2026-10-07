@@ -38,9 +38,9 @@ export interface PostcodeReference {
   code: string;
   level: Level;
   confidence?: Confidence;
-  /** NIPOST reported the building code as assigned; absent when not checked. */
+  /** NIPOST reported the building code as assigned; absent when not checked. Only valid when level is building. */
   assigned?: boolean;
-  /** RFC 3339 date-time with an offset. */
+  /** RFC 3339 date-time with an offset. Only valid when level is building. */
   checked_at?: string;
   source?: Source;
 }
@@ -63,4 +63,26 @@ export interface FhirExtension {
   valueCode?: string;
   valueBoolean?: boolean;
   valueDateTime?: string;
+}
+
+/** Minimal structural subset of FHIR R4 Address. */
+export interface FhirAddress {
+  use?: string;
+  type?: string;
+  text?: string;
+  line?: string[];
+  city?: string;
+  district?: string;
+  state?: string;
+  postalCode?: string;
+  country?: string;
+  period?: unknown;
+  extension?: FhirExtension[];
+}
+
+/** What suppressSmallCounts would drop; kept apart from the export payload on purpose. */
+export interface SuppressionReport {
+  keptRows: number;
+  suppressedRows: number;
+  suppressedTotal: number;
 }

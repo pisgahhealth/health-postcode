@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EXTENSION_URL, SUB_EXTENSIONS, fromFhirExtension, toFhirExtension } from "./fhir";
+import { EXTENSION_URL, SUB_EXTENSIONS, coarsenFhirAddress, fromFhirExtension, toFhirExtension } from "./fhir";
 import { toReference } from "./reference";
 import type { FhirExtension, ReferenceOptions } from "./types";
 
@@ -79,14 +79,28 @@ describe("toFhirExtension", () => {
         { url: "checkedAt", valueDateTime: "2026-10-06T09:00:00Z" },
       ],
     });
+    // Asking for a coarser level coarsens: the building-level check is dropped and the result is marked derived.
     expect(toFhirExtension(ref, { level: "area" })).toStrictEqual({
       url: EXTENSION_URL,
       extension: [
         { url: "code", valueString: "EK-01-A03-FK" },
         { url: "level", valueCode: "area" },
-        { url: "checkedAt", valueDateTime: "2026-10-06T09:00:00Z" },
+        { url: "source", valueCode: "derived" },
       ],
     });
+  });
+
+  it("refuses assigned or checkedAt at any level but building", () => {
+    expect(() => toFhirExtension(FULL, { level: "district", assigned: true })).toThrow(RangeError);
+    expect(() => toFhirExtension(FULL, { level: "area", checkedAt: "2026-10-06T09:00:00Z" })).toThrow(/coarsen/);
+    expect(fromFhirExtension({
+      url: EXTENSION_URL,
+      extension: [
+        { url: "code", valueString: "EK-01-A03" },
+        { url: "level", valueCode: "district" },
+        { url: "assigned", valueBoolean: true },
+      ],
+    })).toBeNull();
   });
 
   it("keeps a reference value when the option for it is undefined", () => {
@@ -104,7 +118,7 @@ describe("toFhirExtension", () => {
   it("never emits an undefined value", () => {
     const cases = [
       toFhirExtension(FULL),
-      toFhirExtension(FULL, { level: "state", assigned: false }),
+      toFhirExtension(FULL, { level: "state", source: "derived" }),
       toFhirExtension({ code: "EK-01-A03", level: "district" }, { confidence: undefined }),
     ];
     for (const ext of cases) {
@@ -124,7 +138,7 @@ describe("fromFhirExtension", () => {
     [FULL, ALL_OPTIONS],
     [FULL, { level: "area", confidence: "low", source: "derived" }],
     ["EK 01 A03", undefined],
-    ["EK 01 A03 FK 01", { level: "district", assigned: false }],
+    ["EK 01 A03 FK 01", { level: "district", confidence: "medium" }],
   ];
 
   it.each(cases)("inverts toFhirExtension for %s %j", (input, options) => {
@@ -207,5 +221,66 @@ describe("fromFhirExtension", () => {
     expect(fromFhirExtension(null)).toBeNull();
     expect(fromFhirExtension("string")).toBeNull();
     expect(fromFhirExtension({})).toBeNull();
+  });
+});
+
+describe("coarsenFhirAddress", () => {
+  const home = {
+    use: "home",
+    type: "physical",
+    text: "12 Example Street, behind the filling station",
+    line: ["12 Example Street"],
+    city: "Ado Ekiti",
+    district: "Ado",
+    state: "Ekiti",
+    postalCode: "EK 01 A03 FK 01",
+    country: "NG",
+    period: { start: "2024-01-01" },
+    extension: [
+      { url: "http://hl7.org/fhir/StructureDefinition/geolocation", extension: [{ url: "latitude", valueDecimal: 7.6 }] },
+      INSTANCE,
+    ],
+  };
+
+  it("keeps use, type, state and country plus the cut extension, and drops everything else", () => {
+    expect(coarsenFhirAddress(home, "district")).toStrictEqual({
+      use: "home",
+      type: "physical",
+      state: "Ekiti",
+      country: "NG",
+      extension: [
+        {
+          url: EXTENSION_URL,
+          extension: [
+            { url: "code", valueString: "EK-01-A03" },
+            { url: "level", valueCode: "district" },
+            { url: "confidence", valueCode: "high" },
+            { url: "source", valueCode: "derived" },
+          ],
+        },
+      ],
+    });
+  });
+
+  it("returns the same reference content when asked for the level it already has", () => {
+    const same = coarsenFhirAddress(home, "building");
+    expect(same?.extension).toStrictEqual([INSTANCE]);
+    expect(same).not.toHaveProperty("postalCode");
+    expect(same).not.toHaveProperty("line");
+  });
+
+  it("gives null for a finer level, a missing or duplicated extension, or a bad address", () => {
+    const district = coarsenFhirAddress(home, "district");
+    expect(coarsenFhirAddress(district, "building")).toBeNull();
+    expect(coarsenFhirAddress({ use: "home", country: "NG" }, "district")).toBeNull();
+    expect(coarsenFhirAddress({ extension: [INSTANCE, INSTANCE] }, "district")).toBeNull();
+    expect(coarsenFhirAddress(null, "district")).toBeNull();
+    expect(coarsenFhirAddress("EK 01 A03 FK 01", "district")).toBeNull();
+  });
+
+  it("does not mutate the input", () => {
+    const before = structuredClone(home);
+    coarsenFhirAddress(home, "lga");
+    expect(home).toEqual(before);
   });
 });

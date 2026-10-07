@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fromReference, isFhirDateTime, toReference } from "./reference";
+import { coarsen, fromReference, isFhirDateTime, toReference } from "./reference";
 import type { PostcodeReference, ReferenceOptions } from "./types";
 
 const FULL = "EK 01 A03 FK 01";
@@ -187,5 +187,52 @@ describe("fromReference reads own keys only", () => {
     expect(fromReference(Object.create({ code: "EK-01", level: "lga" }))).toBeNull();
     const inherited = Object.assign(Object.create({ assigned: true, confidence: "high" }), { code: "EK-01", level: "lga" });
     expect(fromReference(inherited)).toEqual({ code: "EK-01", level: "lga" });
+  });
+});
+
+describe("assigned and checked_at belong to a building code only", () => {
+  it("toReference throws when they are given with a coarser level", () => {
+    expect(() => toReference(FULL, { level: "district", assigned: true })).toThrow(RangeError);
+    expect(() => toReference(FULL, { level: "lga", checkedAt: "2026-10-06T09:00:00Z" })).toThrow(/coarsen/);
+    expect(() => toReference("EK 01 A03", { assigned: false })).toThrow(RangeError);
+  });
+
+  it("fromReference returns null for a coarser reference that carries them", () => {
+    expect(fromReference({ code: "EK-01-A03", level: "district", assigned: true })).toBeNull();
+    expect(fromReference({ code: "EK-01", level: "lga", checked_at: "2026-10-06T09:00:00Z" })).toBeNull();
+    expect(fromReference({ code: "EK-01-A03-FK-01", level: "building", assigned: true })).not.toBeNull();
+  });
+});
+
+describe("coarsen", () => {
+  const checked: PostcodeReference = {
+    code: "EK-01-A03-FK-01",
+    level: "building",
+    confidence: "high",
+    assigned: true,
+    checked_at: "2026-10-06T09:00:00Z",
+    source: "lookup",
+  };
+
+  it("cuts the code, keeps confidence, drops the check and marks the result derived", () => {
+    expect(coarsen(checked, "district")).toStrictEqual({
+      code: "EK-01-A03",
+      level: "district",
+      confidence: "high",
+      source: "derived",
+    });
+    expect(coarsen(checked, "state")).toStrictEqual({ code: "EK", level: "state", confidence: "high", source: "derived" });
+  });
+
+  it("returns the normalised reference unchanged at its own level", () => {
+    expect(coarsen(checked, "building")).toStrictEqual(checked);
+    expect(coarsen({ code: "ek 01 a03", level: "district" }, "district")).toStrictEqual({ code: "EK-01-A03", level: "district" });
+  });
+
+  it("gives null for a finer level, an unknown level or an invalid reference", () => {
+    expect(coarsen({ code: "EK-01-A03", level: "district" }, "building")).toBeNull();
+    expect(coarsen(checked, "street" as never)).toBeNull();
+    expect(coarsen({ code: "EK-01-A03", level: "building" }, "state")).toBeNull();
+    expect(coarsen(null, "state")).toBeNull();
   });
 });

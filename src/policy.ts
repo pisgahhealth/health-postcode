@@ -1,4 +1,4 @@
-import { LEVELS, type Level, type Style } from "./types";
+import { LEVELS, type Level, type Style, type SuppressionReport } from "./types";
 import { assertStyle, levelIndex } from "./segments";
 import { at, parsePartial } from "./postcode";
 
@@ -31,23 +31,21 @@ export function forPurpose(input: string, purpose: Purpose, options?: ForPurpose
   return at(input, target, { style });
 }
 
-export interface SuppressResult<T> {
-  kept: T[];
-  suppressed: { rows: number; total: number };
+interface CountOptions<T> {
+  count: keyof T & string;
+  min?: number;
 }
 
-export function suppressSmallCounts<T extends Record<string, unknown>>(
+function* countedRows<T extends Record<string, unknown>>(
   rows: readonly T[],
-  options: { count: keyof T & string; min?: number },
-): SuppressResult<T> {
+  options: CountOptions<T>,
+): Generator<[T, number, number]> {
   if (!Array.isArray(rows)) throw new TypeError("rows must be an array");
   if (typeof options?.count !== "string") throw new TypeError("count must name the column to read");
   const min = options.min ?? 5;
   if (typeof min !== "number" || !Number.isFinite(min) || min < 0) {
     throw new RangeError("min must be a finite non-negative number");
   }
-  const kept: T[] = [];
-  const suppressed = { rows: 0, total: 0 };
   for (let i = 0; i < rows.length; i += 1) {
     const row = rows[i];
     const value =
@@ -55,12 +53,32 @@ export function suppressSmallCounts<T extends Record<string, unknown>>(
     if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
       throw new TypeError(`row ${i}: count must be a finite non-negative number`);
     }
+    yield [row, value, min];
+  }
+}
+
+/** The rows safe to export: those whose count is at or above min (default 5), same objects, same order. */
+export function suppressSmallCounts<T extends Record<string, unknown>>(rows: readonly T[], options: CountOptions<T>): T[] {
+  const kept: T[] = [];
+  for (const [row, value, min] of countedRows(rows, options)) {
+    if (value >= min) kept.push(row);
+  }
+  return kept;
+}
+
+/** What suppressSmallCounts drops for the same input; for logs and review, never for the export itself. */
+export function suppressionReport<T extends Record<string, unknown>>(
+  rows: readonly T[],
+  options: CountOptions<T>,
+): SuppressionReport {
+  const report: SuppressionReport = { keptRows: 0, suppressedRows: 0, suppressedTotal: 0 };
+  for (const [, value, min] of countedRows(rows, options)) {
     if (value >= min) {
-      kept.push(row);
+      report.keptRows += 1;
     } else {
-      suppressed.rows += 1;
-      suppressed.total += value;
+      report.suppressedRows += 1;
+      report.suppressedTotal += value;
     }
   }
-  return { kept, suppressed };
+  return report;
 }

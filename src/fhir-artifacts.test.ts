@@ -188,3 +188,23 @@ describe("ngpc-2 ties level to the length of code", () => {
     });
   });
 });
+
+describe("ngpc-3 keeps assigned and checkedAt at building level", () => {
+  const sd = JSON.parse(readFileSync(new URL("StructureDefinition-ng-digital-postcode.json", FHIR_DIR), "utf8"));
+  const root = sd.differential.element.find((e: { id: string }) => e.id === "Extension");
+  const constraint = root.constraint.find((c: { key: string }) => c.key === "ngpc-3");
+
+  it("is an error-severity constraint on the root element naming both sub-extensions", () => {
+    expect(constraint.severity).toBe("error");
+    expect(constraint.expression).toContain("extension.where(url = 'level').value = 'building'");
+    expect(constraint.expression).toContain("extension.where(url = 'assigned').empty()");
+    expect(constraint.expression).toContain("extension.where(url = 'checkedAt').empty()");
+  });
+
+  it("matches what fromFhirExtension enforces", () => {
+    const district = load(EXAMPLES_DIR, "Patient-district.json").address[0].extension[0];
+    expect(fromFhirExtension(district)).not.toBeNull();
+    const withCheck = { ...district, extension: [...district.extension, { url: "assigned", valueBoolean: true }] };
+    expect(fromFhirExtension(withCheck)).toBeNull();
+  });
+});

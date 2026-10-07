@@ -1,5 +1,6 @@
-import type { FhirExtension, PostcodeReference, ReferenceOptions } from "./types";
-import { fromReference, toReference } from "./reference";
+import type { FhirAddress, FhirExtension, Level, PostcodeReference, ReferenceOptions } from "./types";
+import { coarsen, fromReference, toReference } from "./reference";
+import { levelIndex } from "./segments";
 
 export const EXTENSION_URL = "https://pisgahhealth.com/fhir/StructureDefinition/ng-digital-postcode";
 export const CODESYSTEM_URLS = Object.freeze({
@@ -59,15 +60,21 @@ export function toFhirExtension(
   if (typeof input === "string") {
     ref = toReference(input, options);
   } else {
-    const base = fromReference(input);
+    let base = fromReference(input);
     if (base === null) return null;
+    const overrides = definedOnly(options);
+    if (overrides.level !== undefined && levelIndex(overrides.level) < levelIndex(base.level)) {
+      base = coarsen(base, overrides.level);
+      if (base === null) return null;
+      delete overrides.level;
+    }
     ref = toReference(base.code, {
       level: base.level,
       confidence: base.confidence,
       assigned: base.assigned,
       checkedAt: base.checked_at,
       source: base.source,
-      ...definedOnly(options),
+      ...overrides,
     });
   }
   if (ref === null) return null;
@@ -102,4 +109,34 @@ export function fromFhirExtension(value: unknown): PostcodeReference | null {
     ref[REFERENCE_KEYS[name]] = entry[key];
   }
   return fromReference(ref);
+}
+
+const ADDRESS_KEYS_KEPT = ["use", "type", "state", "country"] as const;
+
+/**
+ * Builds the share copy of one Address at a coarser level: the cut extension plus use, type, state and country.
+ * Lines, city, district, text, postalCode, period and every other extension are dropped. It handles one Address,
+ * not the resource around it.
+ */
+export function coarsenFhirAddress(address: unknown, level: Level): FhirAddress | null {
+  if (typeof address !== "object" || address === null) return null;
+  const source = address as Record<string, unknown>;
+  const extensions = Array.isArray(source.extension) ? (source.extension as unknown[]) : [];
+  const ours = extensions.filter(
+    (e) => typeof e === "object" && e !== null && (e as Record<string, unknown>).url === EXTENSION_URL,
+  );
+  if (ours.length !== 1) return null;
+  const ref = fromFhirExtension(ours[0]);
+  if (ref === null) return null;
+  const cut = coarsen(ref, level);
+  if (cut === null) return null;
+  const ext = toFhirExtension(cut);
+  if (ext === null) return null;
+  const out: FhirAddress = {};
+  for (const key of ADDRESS_KEYS_KEPT) {
+    const value = Object.hasOwn(source, key) ? source[key] : undefined;
+    if (typeof value === "string") out[key] = value;
+  }
+  out.extension = [ext];
+  return out;
 }

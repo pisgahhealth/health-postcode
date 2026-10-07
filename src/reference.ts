@@ -8,6 +8,7 @@ import {
   type Source,
 } from "./types";
 import { at, parsePartial } from "./postcode";
+import { levelIndex } from "./segments";
 
 const FHIR_DATE_TIME =
   /^([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\.[0-9]+)?(Z|[+-]((0[0-9]|1[0-3]):[0-5][0-9]|14:00))$/;
@@ -63,9 +64,22 @@ export function toReference(input: string, options?: ReferenceOptions): Postcode
   const parsed = parsePartial(input);
   if (parsed === null) return null;
   const target = level ?? parsed.level;
+  if (target !== "building" && (assigned !== undefined || checkedAt !== undefined)) {
+    throw new RangeError("assigned and checkedAt describe a building code; use coarsen() to cut a checked reference");
+  }
   const code = at(input, target, { style: "hyphen" });
   if (code === null) return null;
   return assemble(code, target, { confidence, assigned, checkedAt, source });
+}
+
+/** Cuts a reference to a coarser level, dropping the building-level check and marking the result derived. */
+export function coarsen(reference: unknown, level: Level): PostcodeReference | null {
+  const base = fromReference(reference);
+  if (base === null || levelIndex(level) < 0 || levelIndex(level) > levelIndex(base.level)) return null;
+  if (level === base.level) return base;
+  const code = at(base.code, level, { style: "hyphen" });
+  if (code === null) return null;
+  return assemble(code, level, { confidence: base.confidence, source: "derived" });
 }
 
 export function fromReference(value: unknown): PostcodeReference | null {
@@ -80,6 +94,7 @@ export function fromReference(value: unknown): PostcodeReference | null {
   if (assigned !== undefined && typeof assigned !== "boolean") return null;
   if (checked_at !== undefined && !isFhirDateTime(checked_at)) return null;
   if (source !== undefined && !isSource(source)) return null;
+  if (parsed.level !== "building" && (assigned !== undefined || checked_at !== undefined)) return null;
   return assemble(parsed.hyphen, parsed.level, {
     confidence,
     assigned,

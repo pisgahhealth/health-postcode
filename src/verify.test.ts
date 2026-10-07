@@ -34,10 +34,14 @@ describe("verify", () => {
     expect(stamped).toBeLessThanOrEqual(after);
   });
 
-  it("treats anything but assigned === true as not assigned", async () => {
-    const lookup = vi.fn().mockResolvedValue({ assigned: "yes" });
-    expect((await verify("EK 01 A03 FK 01", lookup))?.assigned).toBe(false);
-  });
+  it.each([[{}], [{ assigned: "yes" }], [{ assigned: 1 }], [{ assigned: null }], [null], ["true"]])(
+    "rejects a lookup result of %j with TypeError instead of recording a negative check",
+    async (result) => {
+      const lookup = vi.fn().mockResolvedValue(result);
+      await expect(verify("EK 01 A03 FK 01", lookup)).rejects.toBeInstanceOf(TypeError);
+      await expect(verify("EK 01 A03 FK 01", lookup)).rejects.toThrow(/failed check/);
+    },
+  );
 
   it("normalises an offset checkedAt to UTC", async () => {
     const lookup = vi.fn<Lookup>().mockResolvedValue({ assigned: true, checkedAt: "2026-10-06T10:00:00+01:00" });

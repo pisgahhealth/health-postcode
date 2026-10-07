@@ -37,7 +37,7 @@ stateName("EK 01 A03 FK 01");                        // "Ekiti"
 ## Policy
 
 ```ts
-import { PURPOSES, forPurpose, suppressSmallCounts } from "health-postcode";
+import { PURPOSES, forPurpose, suppressSmallCounts, suppressionReport } from "health-postcode";
 
 PURPOSES; // { analytics: "district", ai: "district", outbreak_signal: "area", chw_planning: "area", home_visit: "building", research_export: "lga", patient_message: null }
 
@@ -50,12 +50,25 @@ const rows = [
   { district: "EK 01 A04", visits: 3 },
   { district: "EK 01 A05", visits: 5 },
 ];
-const { kept, suppressed } = suppressSmallCounts(rows, { count: "visits" });
-kept.map((row) => row.district); // ["EK 01 A03", "EK 01 A05"]
-suppressed;                      // { rows: 1, total: 3 }
+const kept = suppressSmallCounts(rows, { count: "visits" });
+kept.map((row) => row.district);              // ["EK 01 A03", "EK 01 A05"]
+suppressionReport(rows, { count: "visits" }); // { keptRows: 2, suppressedRows: 1, suppressedTotal: 3 }
 ```
 
-Pass `purposes` to override rows; tighten rather than loosen, and keep your table in code where it gets reviewed. `suppressSmallCounts` drops rows with a count below `min` (default 5) rather than folding them into an "other" row, and `kept` holds the same objects in the same order. Compute every published total from `kept` only. The reason behind each purpose is in [policy.md](policy.md).
+Pass `purposes` to override rows; tighten rather than loosen, and keep your table in code where it gets reviewed. `suppressSmallCounts` returns only the rows at or above `min` (default 5), the same objects in the same order, and nothing about what it dropped; `suppressionReport` gives those counts separately for logs, never for the export. Compute every published total from the kept rows only.
+
+`forPurpose` chooses a precision and nothing more. Authentication, whether the purpose is real, whether a visit is assigned, time windows and audit logging belong to the application that calls it; see [policy.md](policy.md).
+
+## Cutting a checked reference
+
+```ts
+import { coarsen } from "health-postcode";
+
+coarsen({ code: "EK-01-A03-FK-01", level: "building", assigned: true, checked_at: "2026-10-06T09:00:00Z", source: "lookup" }, "district");
+// { code: "EK-01-A03", level: "district", source: "derived" }
+```
+
+`assigned` and `checked_at` describe one building code, so they only exist at building level. `coarsen` cuts the code, keeps `confidence`, drops the check and marks the result `derived`. Passing `assigned` or `checkedAt` with a coarser `level` to `toReference` or `toFhirExtension` throws a `RangeError`; reading a coarser reference that carries them gives `null`.
 
 ## Checking a code against NIPOST
 
@@ -71,7 +84,7 @@ const ref = await verify("EK 01 A03 FK 01", async (code) => {
 // { code: "EK-01-A03-FK-01", level: "building", assigned: true, checked_at: "2026-...Z", source: "lookup" }
 ```
 
-This package makes no network calls. `verify` calls your lookup once with the compact code, returns `null` without calling it when the input is malformed or partial, and lets the lookup's errors through. Return `checkedAt` too if your source gives one, as a full timestamp with an offset, or `verify` throws a `RangeError`; otherwise it uses the current time. The adapter was checked against `ng-postcode` 0.1.1, where `createPostcodeClient` takes `{ baseUrl, apiKey, fetch }`, `lookup(code, level)` resolves to the response's `data`, and `valid` is the field read here as assigned. Its mock answers `valid: true` for any well-formed code, so confirm the field against the version you install.
+This package makes no network calls. `verify` calls your lookup once with the compact code, returns `null` without calling it when the input is malformed or partial, and lets the lookup's errors through. The lookup must resolve to `{ assigned: true }` or `{ assigned: false }`; anything else (an empty object, a string, a missing field) throws a `TypeError`, because a malformed answer is a failed check and must not be recorded as "not assigned". Keep "not checked", "check failed" and "NIPOST says unassigned" apart in your application. Return `checkedAt` too if your source gives one, as a full timestamp with an offset, or `verify` throws a `RangeError`; otherwise it uses the current time. The adapter was checked against `ng-postcode` 0.1.1, where `createPostcodeClient` takes `{ baseUrl, apiKey, fetch }`, `lookup(code, level)` resolves to the response's `data`, and `valid` is the field read here as assigned. Its mock answers `valid: true` for any well-formed code, so confirm the field against the version you install.
 
 ## Command line
 
