@@ -4,6 +4,17 @@ Nigeria's NIPOST digital postcode, made safe for health records.
 
 A code such as `EK 01 A03 FK 01` names one building, not a person. Cut it short and it zooms out: `EK 01 A03` is a district, `EK 01` a local government area. This package parses the code, cuts it to a named level, applies a who-sees-what policy, and stores it as a FHIR R4 `Address` extension the same way in every system. Zero dependencies, ESM and CommonJS, Node 18 or later.
 
+## What you can build with it
+
+For developers writing EMRs, community health worker apps, lab and pharmacy systems, surveillance dashboards or delivery services in Nigeria. The code goes into a record once; these then become features instead of projects:
+
+- **Find patients again.** Store a verified building code at registration (`verify`) and give the nurse who visits today the full code (`forPurpose(code, "home_visit")`). Follow-up for HIV, TB, antenatal and immunisation stops depending on "behind the filling station".
+- **Walking lists for health workers.** Group overdue patients by patch with `at(code, "area")`, so one walk covers a street instead of a scatter of landmarks.
+- **Street-level outbreak signals.** Count diagnoses by `at(code, "area")` this week against last month and see a cluster while the cases are still few; share it with the state at district level.
+- **Dashboards, AI and research exports that cannot leak a front door.** `forPurpose(code, "analytics")`, `forPurpose(code, "ai")` and `suppressSmallCounts` give you data minimisation as a function call, not a policy document.
+- **Records that travel.** The FHIR R4 extension lets OpenMRS, DHIS2, lab and claims systems exchange a location with its precision and a NIPOST-verified flag, so it means the same thing on both sides.
+- **Delivery and home services.** Pharmacy refills, home sample collection and post-discharge visits with the building released only at dispatch time, never in the SMS.
+
 ## Install
 
 ```sh
